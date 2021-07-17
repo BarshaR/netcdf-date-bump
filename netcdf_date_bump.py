@@ -11,12 +11,12 @@ it will be ignored.
 - All paths should be passed in relative to the execution of the script, maybe this should be absolute
 
 '''
+from datetime import datetime, timedelta
+from cftime import num2date, date2num
+import netcdfdatebump.netcdf_utils as netcdf_utils
 import sys
-import getopt
 import argparse
 import logging
-import yaml
-import netCDF4
 
 input_file = ''
 output_file = ''
@@ -26,8 +26,7 @@ start_time = ''
 log_level = logging.ERROR
 
 parser = argparse.ArgumentParser()
-# parser.add_argument("-v", "--verbose", help="increase output verbosity",
-#                     action="store_true")
+
 parser.add_argument(
     '-i', '--input-file', type=str, help='path to input file')
 parser.add_argument(
@@ -38,6 +37,7 @@ parser.add_argument('-t', '--time-step',
                     help='Amount of time between time slices in hours')
 parser.add_argument('-l', '--log-level', choices=['debug', 'info', 'error'],
                     help='define log level. options: debug, info, error')
+
 args = parser.parse_args()
 
 # Process arguments
@@ -78,3 +78,23 @@ if args.time_step:
 else:
     logging.info(
         'No timestep provided, it will be calculated automatically as the difference between existing values')
+
+
+def main():
+    update_netcdf_file()
+
+
+def update_netcdf_file():
+    nc_dataset = netcdf_utils.open_nc_file(input_file)
+    # print(nc_dataset.data_model)
+    curr_times = nc_dataset.variables['time']
+    print(curr_times)
+    times_as_date = num2date(
+        curr_times[:], units=curr_times.units, calendar='gregorian')
+    print(times_as_date)
+    # Close file
+    netcdf_utils.close_nc_file(nc_dataset)
+
+
+if __name__ == '__main__':
+    main()
