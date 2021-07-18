@@ -27,6 +27,12 @@ def open_nc_file(path):
         # Open file in append mode
     return Dataset(path, 'a')
 
+# Replace the time variable in a nc dataset with the supplied array
+
+
+def replace_nc_times(times, dataset):
+    dataset.variables['time'][:] = times
+
 
 def close_nc_file(dataset):
     dataset.close()

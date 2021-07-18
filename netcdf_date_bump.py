@@ -17,6 +17,7 @@ import netcdfdatebump.netcdf_utils as netcdf_utils
 import sys
 import argparse
 import logging
+from pprint import pprint
 
 input_file = ''
 output_file = ''
@@ -87,37 +88,63 @@ def main():
 
 def update_nc_dates():
     nc_dataset = netcdf_utils.open_nc_file(input_file)
-    ''' TODO: 
-        - read time variable as array
-        - if timestep is set - create time delta variable with the specified value
-            - else calculate the time step by the delta of times[1] and times[0]
-        - Create a new array with updated times
-            - take the first time in the array, update the year and date portion - leaving the time in tact
-            - Starting at times[1], set each time to times[0] + (delta * index)
-            - this should give you a sequence which starts from the current date and increments based on the timestep value
 
-
-    '''
-    curr_times = nc_dataset.variables['time']
+    nc_time = nc_dataset.variables['time']
     # Convert array of timestamps to python datetime objects
-    times_as_pydate = num2pydate(
-        curr_times[:], units=curr_times.units, calendar='gregorian')
-    print(times_as_pydate)
+    curr_times_pydate = num2pydate(
+        nc_time[:], units=nc_time.units, calendar='gregorian')
+
+    time_step_delta = generate_timedelta(curr_times_pydate)
+
+    # TODO: Check if start datetime was supplied - this this as the starting time if provided.
+    new_times = generate_new_time_list(curr_times_pydate, time_step_delta)
+
+    # Convert list of datetime objects to timestamps
+    new_timestamps = date2num(
+        new_times[:], units=nc_time.units, calendar='gregorian')
+
+    # Only print new times if dry-run or debug is enabled
+    if dry_run:
+        print_time_diff(curr_times_pydate, new_times)
+    else:
+        if log_level == logging.DEBUG:
+            print_time_diff(curr_times_pydate, new_times)
+        netcdf_utils.replace_nc_times(new_timestamps, nc_dataset)
+    # Close file
+    netcdf_utils.close_nc_file(nc_dataset)
+
+
+def print_time_diff(old_times, new_times):
+    # Ensure time arrays are the same length
+    if len(old_times) == len(new_times):
+        print('===================')
+        for i in range(len(old_times)):
+            print(f'{old_times[i].isoformat()} --> {new_times[i].isoformat()}')
+        print('===================')
+    else:
+        logging.error(
+            "Unable to print time diff - time arrays are of different length")
+
+
+def generate_timedelta(times_pydate):
     # Ensure time array meets minimum timestep values for the delta calculation
     if time_step is not None:
         # Set the delta to the user specified duration
-        time_step_delta = timedelta(seconds=time_step)
-    elif time_step is None and len(times_as_pydate) >= TIME_STEPS_MIN:
-        # Should check existance before directly accessing indexes
+        return timedelta(seconds=time_step)
+    elif time_step is None and len(times_pydate) >= TIME_STEPS_MIN:
+        # TODO: Should check existance before directly accessing indexes
         # Set timestep delta to diff between first two times in array
-        time_step_delta = times_as_pydate[1] - times_as_pydate[0]
+        return times_pydate[1] - times_pydate[0]
     else:
         logging.error(
             'No timestep provided and times array length is too small to derive it')
         sys.exit(2)
 
+
+def generate_new_time_list(times_pydate, time_step_delta):
+
     # Set the starting date in the sequence to begin at todays date - leaving the time portion unchanged.
-    start_datetime = times_as_pydate[0]
+    start_datetime = times_pydate[0]
     # Extract the time part of the starting date
     start_time = start_datetime.time()
     # Extract the date part of now() - where now is in UTC
@@ -127,18 +154,11 @@ def update_nc_dates():
     # Note, this new_start_datetime is not timezone aware. However, this is fine as its releative to the UTC date above.
     new_start_datetime = datetime.combine(date=start_date, time=start_time)
 
-    new_times = [new_start_datetime for time in times_as_pydate]
+    new_times = [new_start_datetime for time in times_pydate]
     # Iterate each datetime and add time_step_delta * index
     new_times = [(new_times[i] + (i * time_step_delta))
                  for i in range(len(new_times))]
-
-    print([time.isoformat() for time in new_times])
-    new_timestamps = date2num(
-        new_times[:], units=curr_times.units, calendar='gregorian')
-    print(len(new_timestamps))
-    nc_dataset.variables['time'][:] = new_timestamps
-    # Close file
-    netcdf_utils.close_nc_file(nc_dataset)
+    return new_times
 
 
 if __name__ == '__main__':
