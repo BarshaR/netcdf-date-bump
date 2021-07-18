@@ -11,8 +11,8 @@ it will be ignored.
 - All paths should be passed in relative to the execution of the script, maybe this should be absolute
 
 '''
-from datetime import datetime, timedelta
-from cftime import num2date, date2num, num2pydate
+from datetime import datetime, timedelta, timezone
+from cftime import date2num, num2pydate
 import netcdfdatebump.netcdf_utils as netcdf_utils
 import sys
 import argparse
@@ -120,24 +120,23 @@ def update_nc_dates():
     start_datetime = times_as_pydate[0]
     # Extract the time part of the starting date
     start_time = start_datetime.time()
-    # Extract the date part of now()
-    start_date = datetime.now().date()
+    # Extract the date part of now() - where now is in UTC
+    # This tries to mitigate issues where the local system time is not UTC. When the date is returned, it can result in inconsistencies based on the timezone offset.
+    start_date = datetime.now(timezone.utc).date()
     # Combine the two together - the rest of the times will be bumped from this datetime
+    # Note, this new_start_datetime is not timezone aware. However, this is fine as its releative to the UTC date above.
     new_start_datetime = datetime.combine(date=start_date, time=start_time)
-    print(f'New start datetime= {new_start_datetime}')
-    print(f'timestep delta = {time_step_delta}')
 
-    # print(curr_times)
-    # times_as_date = num2date(
-    #     curr_times[:], units=curr_times.units, calendar='gregorian')
-    # times_as_pydate = num2pydate(
-    #     curr_times[:], units=curr_times.units, calendar='gregorian')
-    # print(times_as_date)
-    # print(times_as_pydate)
+    new_times = [new_start_datetime for time in times_as_pydate]
+    # Iterate each datetime and add time_step_delta * index
+    new_times = [(new_times[i] + (i * time_step_delta))
+                 for i in range(len(new_times))]
 
-    # date1 = times_as_pydate[0]
-    # date2 = times_as_pydate[1]
-    # date_delta = date2 - date1
+    print([time.isoformat() for time in new_times])
+    new_timestamps = date2num(
+        new_times[:], units=curr_times.units, calendar='gregorian')
+    print(len(new_timestamps))
+    nc_dataset.variables['time'][:] = new_timestamps
     # Close file
     netcdf_utils.close_nc_file(nc_dataset)
 
