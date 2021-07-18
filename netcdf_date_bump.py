@@ -14,6 +14,7 @@ it will be ignored.
 from datetime import datetime, timedelta, timezone
 from cftime import date2num, num2pydate
 import netcdfdatebump.netcdf_utils as netcdf_utils
+import netcdfdatebump.datetime_utils as datetime_utils
 import sys
 import argparse
 import logging
@@ -24,7 +25,7 @@ output_file = ''
 dry_run = False
 time_step = None
 start_time = ''
-TIME_STEPS_MIN = 2
+
 log_level = logging.ERROR
 
 parser = argparse.ArgumentParser()
@@ -94,10 +95,12 @@ def update_nc_dates():
     curr_times_pydate = num2pydate(
         nc_time[:], units=nc_time.units, calendar='gregorian')
 
-    time_step_delta = generate_timedelta(curr_times_pydate)
+    time_step_delta = datetime_utils.generate_timedelta(
+        curr_times_pydate, time_step)
 
     # TODO: Check if start datetime was supplied - this this as the starting time if provided.
-    new_times = generate_new_time_list(curr_times_pydate, time_step_delta)
+    new_times = datetime_utils.generate_new_time_list(
+        curr_times_pydate, time_step_delta)
 
     # Convert list of datetime objects to timestamps
     new_timestamps = date2num(
@@ -124,41 +127,6 @@ def print_time_diff(old_times, new_times):
     else:
         logging.error(
             "Unable to print time diff - time arrays are of different length")
-
-
-def generate_timedelta(times_pydate):
-    # Ensure time array meets minimum timestep values for the delta calculation
-    if time_step is not None:
-        # Set the delta to the user specified duration
-        return timedelta(seconds=time_step)
-    elif time_step is None and len(times_pydate) >= TIME_STEPS_MIN:
-        # TODO: Should check existance before directly accessing indexes
-        # Set timestep delta to diff between first two times in array
-        return times_pydate[1] - times_pydate[0]
-    else:
-        logging.error(
-            'No timestep provided and times array length is too small to derive it')
-        sys.exit(2)
-
-
-def generate_new_time_list(times_pydate, time_step_delta):
-
-    # Set the starting date in the sequence to begin at todays date - leaving the time portion unchanged.
-    start_datetime = times_pydate[0]
-    # Extract the time part of the starting date
-    start_time = start_datetime.time()
-    # Extract the date part of now() - where now is in UTC
-    # This tries to mitigate issues where the local system time is not UTC. When the date is returned, it can result in inconsistencies based on the timezone offset.
-    start_date = datetime.now(timezone.utc).date()
-    # Combine the two together - the rest of the times will be bumped from this datetime
-    # Note, this new_start_datetime is not timezone aware. However, this is fine as its releative to the UTC date above.
-    new_start_datetime = datetime.combine(date=start_date, time=start_time)
-
-    new_times = [new_start_datetime for time in times_pydate]
-    # Iterate each datetime and add time_step_delta * index
-    new_times = [(new_times[i] + (i * time_step_delta))
-                 for i in range(len(new_times))]
-    return new_times
 
 
 if __name__ == '__main__':
