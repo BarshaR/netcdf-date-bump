@@ -35,4 +35,8 @@ def replace_nc_times(times, dataset):
 
 
 def close_nc_file(dataset):
-    dataset.close()
+    try:
+        dataset.close()
+    except Exception as e:
+        logger.error(f'Error closing nc dataset: {e.__class__} occured')
+        sys.exit(2)

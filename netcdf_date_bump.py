@@ -2,14 +2,6 @@
 
 This tool updates the timestamps in a netcdf file based on the arguments passed in.
 
-It supports the following - 
-- Automatic detection of timestamp resolution e.g 1 hourly, 3 hourly or daily
-    - If a custom resolution is needed, it can be specified
-- Updates will be made based on UTC time, if the script runs on a machine using a local timezone
-it will be ignored. 
-- Dry run mode will print the proposed time stamp changes instead of modifying the file.
-- All paths should be passed in relative to the execution of the script, maybe this should be absolute
-
 '''
 from datetime import datetime, timedelta, timezone
 from cftime import date2num, num2pydate
@@ -31,15 +23,17 @@ log_level = logging.ERROR
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
-    '-i', '--input-file', type=str, help='path to input file')
+    '-i', '--input-file', type=str, help='path to input file.')
 parser.add_argument(
-    '-o', '--output-file', type=str, help='name of output file (overwrites input file if not specified)')
+    '-o', '--output-file', type=str, help='name of output file (overwrites input file if not specified).')
 parser.add_argument(
-    '-d', '--dry-run', help='print the output instead of modifying the file', action='store_true')
-parser.add_argument('-t', '--time-step',
-                    help='Amount of time between time slices in seconds')
+    '-d', '--dry-run', help='print the output instead of modifying the file.', action='store_true')
+parser.add_argument('-t', '--time-step', type=int,
+                    help='Amount of time between time slices in seconds.')
+parser.add_argument('-s', '--start-time', type=str,
+                    help='ISO formatted time which the new times will begin from.')
 parser.add_argument('-l', '--log-level', choices=['debug', 'info', 'error'],
-                    help='define log level. options: debug, info, error')
+                    help='define log level. options: debug, info, error.')
 
 args = parser.parse_args()
 
@@ -108,25 +102,14 @@ def update_nc_dates():
 
     # Only print new times if dry-run or debug is enabled
     if dry_run:
-        print_time_diff(curr_times_pydate, new_times)
+        datetime_utils.print_time_diff(curr_times_pydate, new_times)
     else:
         if log_level == logging.DEBUG:
-            print_time_diff(curr_times_pydate, new_times)
+            datetime_utils.print_time_diff(curr_times_pydate, new_times)
         netcdf_utils.replace_nc_times(new_timestamps, nc_dataset)
     # Close file
     netcdf_utils.close_nc_file(nc_dataset)
-
-
-def print_time_diff(old_times, new_times):
-    # Ensure time arrays are the same length
-    if len(old_times) == len(new_times):
-        print('===================')
-        for i in range(len(old_times)):
-            print(f'{old_times[i].isoformat()} --> {new_times[i].isoformat()}')
-        print('===================')
-    else:
-        logging.error(
-            "Unable to print time diff - time arrays are of different length")
+    logging.info("Success")
 
 
 if __name__ == '__main__':
