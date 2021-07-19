@@ -8,6 +8,7 @@ import logging
 import sys
 from netCDF4 import Dataset
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,7 +26,12 @@ def open_nc_file(path):
         logger.error('Invalid input file')
         sys.exit(2)
         # Open file in append mode
-    return Dataset(path, 'a')
+    try:
+        dataset = Dataset(path, 'a')
+    except Exception as e:
+        logger.error(f'Failed to open Netcdf file: {e.strerror}')
+        sys.exit(2)
+    return dataset
 
 # Replace the time variable in a nc dataset with the supplied array
 
@@ -38,5 +44,5 @@ def close_nc_file(dataset):
     try:
         dataset.close()
     except Exception as e:
-        logger.error(f'Error closing nc dataset: {e.__class__} occured')
+        logger.error(f'Error closing nc dataset: {e.strerror}')
         sys.exit(2)

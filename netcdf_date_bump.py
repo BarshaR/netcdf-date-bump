@@ -3,14 +3,12 @@
 This tool updates the timestamps in a netcdf file based on the arguments passed in.
 
 '''
-from datetime import datetime, timedelta, timezone
 from cftime import date2num, num2pydate
-import netcdfdatebump.netcdf_utils as netcdf_utils
-import netcdfdatebump.datetime_utils as datetime_utils
+import utils.netcdf_utils as netcdf_utils
+import utils.datetime_utils as datetime_utils
 import sys
 import argparse
 import logging
-from pprint import pprint
 
 input_file = ''
 output_file = ''

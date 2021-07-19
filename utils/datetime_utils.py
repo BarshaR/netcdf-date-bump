@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from pprint import pprint, pformat
-from cftime import date2num, num2pydate
-import netcdfdatebump.netcdf_utils as netcdf_utils
+from pprint import pformat
 import logging
 import sys
 
@@ -34,7 +32,7 @@ def generate_new_time_list(times_pydate, time_step_delta):
     # Extract the time part of the starting date
     start_time = start_datetime.time()
     # Extract the date part of now() - where now is in UTC
-    # This tries to mitigate issues where the local system time is not UTC. When the date is returned, it can result in inconsistencies based on the timezone offset.
+    # This tries to mitigate issues where the local system time is not UTC.
     start_date = datetime.now(timezone.utc).date()
     logger.debug(f'current UTC date - {start_date}')
     # Combine the two together - the rest of the times will be bumped from this datetime
