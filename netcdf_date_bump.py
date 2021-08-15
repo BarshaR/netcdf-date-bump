@@ -1,6 +1,7 @@
-''' NetCDF date bump 
+''' NetCDF date bump
 
-This tool updates the timestamps in a netcdf file based on the arguments passed in.
+This tool updates the timestamps in a netcdf file based on the arguments
+passed in.
 
 '''
 from cftime import date2num, num2pydate
@@ -23,13 +24,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     '-i', '--input-file', type=str, help='path to input file.')
 parser.add_argument(
-    '-o', '--output-file', type=str, help='name of output file (overwrites input file if not specified).')
+    '-o', '--output-file', type=str,
+    help='name of output file (overwrites input file if not specified).')
 parser.add_argument(
-    '-d', '--dry-run', help='print the output instead of modifying the file.', action='store_true')
+    '-d', '--dry-run', help='print the output instead of modifying the file.',
+    action='store_true')
 parser.add_argument('-t', '--time-step', type=int,
                     help='Amount of time between time slices in seconds.')
 parser.add_argument('-s', '--start-time', type=str,
-                    help='ISO formatted time which the new times will begin from.')
+                    help='ISO formatted time which the new times will begin \
+                        from.')
 parser.add_argument('-l', '--log-level', choices=['debug', 'info', 'error'],
                     help='define log level. options: debug, info, error.')
 
@@ -57,12 +61,20 @@ if args.output_file:
     output_file = args.output_file
     logging.info(f'output-file={output_file}')
 else:
-    logging.info(f'No output file provided, input file used.')
+    logging.info('No output file provided, input file used.')
     output_file = input_file
 
 if args.dry_run:
     dry_run = args.dry_run
     logging.info('dry-run=true')
+
+if args.start_time:
+    start_time = datetime_utils.parse_start_datetime(args.start_time)
+    if (start_time is not None):
+        logging.info(f'start-time={start_time}')
+    else:
+        logging.error('start-time is invalid.')
+        sys.exit(2)
 
 if args.time_step:
     time_step = args.time_step
@@ -72,7 +84,8 @@ if args.time_step:
         sys.exit(2)
 else:
     logging.info(
-        'No timestep provided, it will be calculated automatically as the difference between existing values')
+        'No timestep provided, it will be calculated automatically as the \
+            difference between existing values')
 
 
 def main():
@@ -90,7 +103,8 @@ def update_nc_dates():
     time_step_delta = datetime_utils.generate_timedelta(
         curr_times_pydate, time_step)
 
-    # TODO: Check if start datetime was supplied - this this as the starting time if provided.
+    # TODO: Check if start datetime was supplied - this this as the starting
+    # time if provided.
     new_times = datetime_utils.generate_new_time_list(
         curr_times_pydate, time_step_delta)
 

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pprint import pformat
 import logging
 import sys
@@ -21,13 +21,17 @@ def generate_timedelta(times_pydate, time_step):
         return times_pydate[1] - times_pydate[0]
     else:
         logging.error(
-            'No timestep delta provided and times array length is too small to derive it')
+            'No timestep delta provided and times array length is too small\
+                 to derive it')
         sys.exit(2)
 
 
 def generate_new_time_list(times_pydate, time_step_delta):
     logger.info('Generating new times based on datetime.now in UTC')
-    # Set the starting date in the sequence to begin at todays date - leaving the time portion unchanged.
+    # Set the starting date in the sequence to begin at todays date - leaving
+    # the time portion unchanged.
+
+    # TODO: Don't assume existence....
     start_datetime = times_pydate[0]
     # Extract the time part of the starting date
     start_time = start_datetime.time()
@@ -35,8 +39,10 @@ def generate_new_time_list(times_pydate, time_step_delta):
     # This tries to mitigate issues where the local system time is not UTC.
     start_date = datetime.now(timezone.utc).date()
     logger.debug(f'current UTC date - {start_date}')
-    # Combine the two together - the rest of the times will be bumped from this datetime
-    # Note, this new_start_datetime is not timezone aware. However, this is fine as its releative to the UTC date above.
+    # Combine the two together - the rest of the times will be
+    # bumped from this datetime
+    # Note, this new_start_datetime is not timezone aware.
+    # However, this is fine as its releative to the UTC date above.
     new_start_datetime = datetime.combine(date=start_date, time=start_time)
     # Replace each existing time with the new_start_datetime
     new_times = [new_start_datetime for time in times_pydate]
@@ -61,3 +67,15 @@ def print_time_diff(old_times, new_times):
     else:
         logging.error(
             "Unable to print time diff - time arrays are of different length")
+
+
+def parse_start_datetime(date_str):
+    try:
+        logger.debug('Parsing start-time')
+        return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
+    except Exception as e:
+        logger.debug(e)
+        logger.error(
+            f'Failed to parse date: {date_str}. Required format: \
+                YYYY-MM-DDTHH:MM:SS')
+        return None

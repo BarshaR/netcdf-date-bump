@@ -46,3 +46,5 @@ def close_nc_file(dataset):
     except Exception as e:
         logger.error(f'Error closing nc dataset: {e.strerror}')
         sys.exit(2)
+
+# TODO: Add method to update the issue time, next issue time and creation time
