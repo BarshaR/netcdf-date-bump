@@ -4,20 +4,19 @@ This tool updates the timestamps in a netcdf file based on the arguments
 passed in.
 
 '''
-from cftime import date2num, num2pydate
-import utils.netcdf_utils as netcdf_utils
-import utils.datetime_utils as datetime_utils
 import sys
 import argparse
 import logging
+from cftime import date2num, num2pydate
+from utils import netcdf_utils, datetime_utils
 
-input_file = ''
-output_file = ''
-dry_run = False
-time_step = None
-start_time = ''
+INPUT_FILE = ''
+OUTPUT_FILE = ''
+DRY_RUN = False
+TIME_STEP = None
+START_TIME = ''
 
-log_level = logging.ERROR
+LOG_LEVEL = logging.ERROR
 
 parser = argparse.ArgumentParser()
 
@@ -42,44 +41,44 @@ args = parser.parse_args()
 # Process arguments
 if args.log_level:
     if args.log_level == 'debug':
-        log_level = logging.DEBUG
+        LOG_LEVEL = logging.DEBUG
     elif args.log_level == 'error':
-        log_level = logging.ERROR
+        LOG_LEVEL = logging.ERROR
     elif args.log_level == 'info':
-        log_level = logging.INFO
-    logging.basicConfig(level=log_level)
-print(f'log_level={logging.getLevelName(log_level)}')
+        LOG_LEVEL = logging.INFO
+    logging.basicConfig(level=LOG_LEVEL)
+print(f'log_level={logging.getLevelName(LOG_LEVEL)}')
 
 if args.input_file:
-    input_file = args.input_file
-    logging.info(f'input-file={input_file}')
+    INPUT_FILE = args.input_file
+    logging.info('input-file=%s', INPUT_FILE)
 else:
     logging.error('Input file missing')
     sys.exit(2)
 
 if args.output_file:
-    output_file = args.output_file
-    logging.info(f'output-file={output_file}')
+    OUTPUT_FILE = args.output_file
+    logging.info('output-file=%s', OUTPUT_FILE)
 else:
     logging.info('No output file provided, input file used.')
-    output_file = input_file
+    OUTPUT_FILE = INPUT_FILE
 
 if args.dry_run:
-    dry_run = args.dry_run
+    DRY_RUN = args.dry_run
     logging.info('dry-run=true')
 
 if args.start_time:
-    start_time = datetime_utils.parse_start_datetime(args.start_time)
-    if (start_time is not None):
-        logging.info(f'start-time={start_time}')
+    START_TIME = datetime_utils.parse_start_datetime(args.start_time)
+    if START_TIME is not None:
+        logging.info('start-time=%s', START_TIME)
     else:
         logging.error('start-time is invalid.')
         sys.exit(2)
 
 if args.time_step:
-    time_step = args.time_step
-    logging.info(f'time-step={time_step}')
-    if time_step < 0:
+    TIME_STEP = args.time_step
+    logging.info('time-step=%s', TIME_STEP)
+    if TIME_STEP < 0:
         logging.error('Time step must be seconds value > 0')
         sys.exit(2)
 else:
@@ -93,7 +92,7 @@ def main():
 
 
 def update_nc_dates():
-    nc_dataset = netcdf_utils.open_nc_file(input_file)
+    nc_dataset = netcdf_utils.open_nc_file(INPUT_FILE)
 
     nc_time = nc_dataset.variables['time']
     # Convert array of timestamps to python datetime objects
@@ -101,7 +100,7 @@ def update_nc_dates():
         nc_time[:], units=nc_time.units, calendar='gregorian')
 
     time_step_delta = datetime_utils.generate_timedelta(
-        curr_times_pydate, time_step)
+        curr_times_pydate, TIME_STEP)
 
     # TODO: Check if start datetime was supplied - this this as the starting
     # time if provided.
@@ -113,10 +112,10 @@ def update_nc_dates():
         new_times[:], units=nc_time.units, calendar='gregorian')
 
     # Only print new times if dry-run or debug is enabled
-    if dry_run:
+    if DRY_RUN:
         datetime_utils.print_time_diff(curr_times_pydate, new_times)
     else:
-        if log_level == logging.DEBUG:
+        if LOG_LEVEL == logging.DEBUG:
             datetime_utils.print_time_diff(curr_times_pydate, new_times)
         netcdf_utils.replace_nc_times(new_timestamps, nc_dataset)
     # Close file

@@ -1,7 +1,7 @@
-from datetime import date, datetime, timedelta, timezone
-from pprint import pformat
 import logging
 import sys
+from datetime import date, datetime, timedelta, timezone
+from pprint import pformat
 
 logger = logging.getLogger(__name__)
 TIME_STEPS_MIN = 2
