@@ -18,6 +18,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install pylint
     - name: Analysing the root dir with pylint
-      run: pylint *.py
-    - name: Analysing utils module
-      run: pylint utils
+      run: |
+        ls -a
+        pylint *.py
+        pylint utils
