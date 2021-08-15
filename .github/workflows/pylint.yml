@@ -17,7 +17,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pylint
-    - name: Analysing the code with pylint
-      run: |
-        pylint *.py
-        pylint utils
+    - name: Analysing the root dir with pylint
+      run: pylint *.py
+    - name: Analysing utils module
+      run: pylint utils
