@@ -40,6 +40,7 @@ args = parser.parse_args()
 
 
 def exit_program(message: str = "Exiting program", exit_code: int = 2) -> None:
+    '''Exit the program and log an error'''
     logger.error(message)
     sys.exit(exit_code)
 
@@ -127,7 +128,7 @@ def update_nc_dates() -> None:
     # TODO: Check if start datetime was supplied - this this as the starting
     # time if provided.
     new_times = datetime_utils.generate_new_time_list(
-        curr_times_pydate, time_step_delta)
+        curr_times_pydate, time_step_delta, START_TIME)
 
     # Convert list of datetime objects to timestamps
     new_timestamps = date2num(

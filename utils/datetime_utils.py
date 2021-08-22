@@ -29,28 +29,25 @@ def generate_timedelta(times_pydate: List[datetime], time_step: Optional[int]):
 
 
 def generate_new_time_list(times_pydate: List[datetime],
-                           time_step_delta: timedelta):
-    logger.info('Generating new times based on datetime.now in UTC')
-    # Set the starting date in the sequence to begin at todays date - leaving
-    # the time portion unchanged.
+                           time_step_delta: timedelta,
+                           custom_start_datetime: datetime = None):
 
-    try:
-        start_datetime = times_pydate[0]
-    except (IndexError, TypeError, ValueError) as err:
-        logger.error('Invalid date list provided: %s', err)
-        raise InvalidDateListException() from err
+    if custom_start_datetime:
+        logger.info('Generating new times based on start time: %s',
+                    custom_start_datetime)
+        start_datetime = custom_start_datetime
+    else:
+        try:
+            start_datetime = times_pydate[0]
+            logger.info('Generating new times based on datetime.now in UTC')
+        except (IndexError, TypeError, ValueError) as err:
+            logger.error('Invalid date list provided: %s', err)
+            raise InvalidDateListException from err
 
-        # Extract the time part of the starting date
-    start_time = start_datetime.time()
-    # Extract the date part of now() - where now is in UTC
-    # This tries to mitigate issues where the local system time is not UTC.
-    start_date = datetime.now(timezone.utc).date()
-    logger.debug('current UTC date - %s', start_date)
-    # Combine the two together - the rest of the times will be
-    # bumped from this datetime
-    # Note, this new_start_datetime is not timezone aware.
-    # However, this is fine as its releative to the UTC date above.
-    new_start_datetime = datetime.combine(date=start_date, time=start_time)
+    if custom_start_datetime:
+        new_start_datetime = custom_start_datetime
+    else:
+        new_start_datetime = generate_start_datetime_now(start_datetime)
     # Replace each existing time with the new_start_datetime
     new_times = [new_start_datetime for time in times_pydate]
     # Modify each datetime and by adding time_step_delta * index
@@ -59,6 +56,26 @@ def generate_new_time_list(times_pydate: List[datetime],
     logger.debug('New times array generated:')
     logger.debug(pformat(new_times))
     return new_times
+
+
+def generate_start_datetime_now(start_datetime) -> datetime:
+    # Set the starting date in the sequence to begin at todays date - leaving
+    # the time portion unchanged.
+    # Extract the time part of the starting date
+    try:
+        start_time = start_datetime.time()
+    except (TypeError, ValueError) as err:
+        logger.error('Invalid start_time: %s', err)
+        raise InvalidStartTimeException from err
+    # Extract the date part of now() - where now is in UTC
+    # This tries to mitigate issues where the local system time is not UTC.
+    start_date = datetime.now(timezone.utc).date()
+    logger.debug('current UTC date - %s', start_date)
+    # Combine the two together - the rest of the times will be
+    # bumped from this datetime
+    # Note, this new_start_datetime is not timezone aware.
+    # However, this is fine as its releative to the UTC date above.
+    return datetime.combine(date=start_date, time=start_time)
 
 
 def print_time_diff(old_times: List[datetime], new_times: List[datetime]):
@@ -93,4 +110,8 @@ class InvalidDateListException(Exception):
 
 
 class GenerateTimeDeltaException(Exception):
+    pass
+
+
+class InvalidStartTimeException(ValueError):
     pass
