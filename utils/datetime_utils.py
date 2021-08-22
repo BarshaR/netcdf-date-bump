@@ -16,18 +16,16 @@ def generate_timedelta(times_pydate: List[datetime], time_step: Optional[int]):
         # Set the delta to the user specified duration
         logger.info('User provided time step delta used')
         return timedelta(seconds=time_step)
-    elif time_step is None and len(times_pydate) >= TIME_STEPS_MIN:
-        # TODO: Should check existance before directly accessing indexes
+    else:
         # Set timestep delta to diff between first two times in array
         logger.info(
             'time step delta not provided, generating delta from time diff')
-        return times_pydate[1] - times_pydate[0]
-    else:
-        # TODO: This should not be handled here, handle it in the callers context
-        logging.error(
-            'No timestep delta provided and times array length is too small\
-                 to derive it')
-        # TODO: Raise exception
+        try:
+            delta = times_pydate[1] - times_pydate[0]
+            return delta
+        except (IndexError, ValueError, TypeError) as err:
+            logger.error('Error calculating delta from date list: %s', err)
+            raise GenerateTimeDeltaException from err
 
 
 def generate_new_time_list(times_pydate: List[datetime],
@@ -91,4 +89,8 @@ def parse_start_datetime(date_str: str) -> datetime:
 
 
 class InvalidDateListException(Exception):
+    pass
+
+
+class GenerateTimeDeltaException(Exception):
     pass

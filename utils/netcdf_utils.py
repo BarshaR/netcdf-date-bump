@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 def open_nc_file(path: str) -> Dataset:
     try:
         dataset = Dataset(path, 'a')
-    except OSError as e:
-        logger.error('Failed to open Netcdf file: %s', e.strerror)
-        raise NetcdfFileIOException(e.strerror)
+    except OSError as err:
+        logger.error('Failed to open Netcdf file: %s', err.strerror)
+        raise NetcdfFileIOException(err.strerror) from err
     return dataset
 
 # Replace the time variable in a nc dataset with the supplied array

@@ -62,7 +62,7 @@ if args.input_file:
     logger.info('input-file=%s', INPUT_FILE)
 else:
     logger.error('Input file missing')
-    exit()
+    exit_program()
 
 if args.output_file:
     OUTPUT_FILE = args.output_file
@@ -118,9 +118,11 @@ def update_nc_dates() -> None:
     curr_times_pydate = num2pydate(
         nc_time[:], units=nc_time.units, calendar='gregorian')
 
-    # TODO: Wrap this in an if statement to handle time delta response
-    time_step_delta = datetime_utils.generate_timedelta(
-        curr_times_pydate, TIME_STEP)
+    try:
+        time_step_delta = datetime_utils.generate_timedelta(
+            curr_times_pydate, TIME_STEP)
+    except datetime_utils.GenerateTimeDeltaException:
+        exit_program()
 
     # TODO: Check if start datetime was supplied - this this as the starting
     # time if provided.
