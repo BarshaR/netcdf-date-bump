@@ -1,13 +1,16 @@
+'''
+Datetime utility class
+'''
 import logging
-import sys
-from datetime import date, datetime, timedelta, timezone
+from typing import List, Optional
+from datetime import datetime, timedelta, timezone
 from pprint import pformat
 
 logger = logging.getLogger(__name__)
 TIME_STEPS_MIN = 2
 
 
-def generate_timedelta(times_pydate, time_step):
+def generate_timedelta(times_pydate: List[datetime], time_step: Optional[int]):
     # Ensure time array meets minimum timestep values for the delta calculation
     if time_step is not None:
         # Set the delta to the user specified duration
@@ -20,25 +23,31 @@ def generate_timedelta(times_pydate, time_step):
             'time step delta not provided, generating delta from time diff')
         return times_pydate[1] - times_pydate[0]
     else:
+        # TODO: This should not be handled here, handle it in the callers context
         logging.error(
             'No timestep delta provided and times array length is too small\
                  to derive it')
-        sys.exit(2)
+        # TODO: Raise exception
 
 
-def generate_new_time_list(times_pydate, time_step_delta):
+def generate_new_time_list(times_pydate: List[datetime],
+                           time_step_delta: timedelta):
     logger.info('Generating new times based on datetime.now in UTC')
     # Set the starting date in the sequence to begin at todays date - leaving
     # the time portion unchanged.
 
-    # TODO: Don't assume existence....
-    start_datetime = times_pydate[0]
-    # Extract the time part of the starting date
+    try:
+        start_datetime = times_pydate[0]
+    except (IndexError, TypeError, ValueError) as err:
+        logger.error('Invalid date list provided: %s', err)
+        raise InvalidDateListException() from err
+
+        # Extract the time part of the starting date
     start_time = start_datetime.time()
     # Extract the date part of now() - where now is in UTC
     # This tries to mitigate issues where the local system time is not UTC.
     start_date = datetime.now(timezone.utc).date()
-    logger.debug(f'current UTC date - {start_date}')
+    logger.debug('current UTC date - %s', start_date)
     # Combine the two together - the rest of the times will be
     # bumped from this datetime
     # Note, this new_start_datetime is not timezone aware.
@@ -54,7 +63,7 @@ def generate_new_time_list(times_pydate, time_step_delta):
     return new_times
 
 
-def print_time_diff(old_times, new_times):
+def print_time_diff(old_times: List[datetime], new_times: List[datetime]):
     # Ensure time arrays are the same length
     # TODO: cleanup to properly support logging framework
     if len(old_times) == len(new_times):
@@ -69,13 +78,17 @@ def print_time_diff(old_times, new_times):
             "Unable to print time diff - time arrays are of different length")
 
 
-def parse_start_datetime(date_str):
+def parse_start_datetime(date_str: str) -> datetime:
     try:
         logger.debug('Parsing start-time')
         return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
-    except Exception as e:
-        logger.debug(e)
+    except ValueError as err:
+        logger.debug(err)
         logger.error(
-            f'Failed to parse date: {date_str}. Required format: \
-                YYYY-MM-DDTHH:MM:SS')
-        return None
+            'Failed to parse date: %s. Required format: \
+                YYYY-MM-DDTHH:MM:SSZ', date_str)
+        raise
+
+
+class InvalidDateListException(Exception):
+    pass

@@ -1,8 +1,8 @@
 {
     "python.pythonPath": "/home/barsh/code/netcdf-date-bump/.venv/bin/python3",
-    "python.linting.pylintEnabled": false,
-    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
     "python.linting.flake8Enabled": true,
+    "python.linting.mypyEnabled": true,
     "[python]": {
         "editor.rulers": [
             79,

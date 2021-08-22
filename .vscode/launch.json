@@ -15,7 +15,9 @@
                 "./nc-files/empty-test.nc",
                 "--dry-run",
                 "-l",
-                "info"
+                "info",
+                "--start-time",
+                "34234"
             ],
             "console": "integratedTerminal"
         }
