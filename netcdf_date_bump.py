@@ -125,8 +125,6 @@ def update_nc_dates() -> None:
     except datetime_utils.GenerateTimeDeltaException:
         exit_program()
 
-    # TODO: Check if start datetime was supplied - this this as the starting
-    # time if provided.
     new_times = datetime_utils.generate_new_time_list(
         curr_times_pydate, time_step_delta, START_TIME)
 
