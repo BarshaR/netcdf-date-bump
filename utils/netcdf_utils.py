@@ -6,6 +6,7 @@ import logging
 from typing import List, Optional
 # pylint: disable=no-name-in-module
 from netCDF4 import Dataset
+from utils import datetime_utils
 
 
 logger = logging.getLogger(__name__)
@@ -68,8 +69,9 @@ def replace_nc_create_time(create_time_timestamp: int, dataset: Dataset):
     set_nc_create_time(
         create_time_timestamp,
         dataset)
-    # TODO: Create date string from timestamp above
-    set_nc_createTimeString('timestamp', dataset)
+    set_nc_createTimeString(
+        datetime_utils.datetime_to_create_time_string(create_time_timestamp),
+        dataset)
 
 
 class NetcdfFileIOException(OSError):

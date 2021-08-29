@@ -113,6 +113,23 @@ def datetime_to_timestamp(input_date: datetime) -> int:
     return int(str(input_date.timestamp()).split('.', maxsplit=1)[0])
 
 
+def timestamp_to_datetime_utc(timestamp: int) -> datetime:
+    try:
+        return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+    except (OverflowError, OSError) as err:
+        logger.error('Error converting timestamp to date: %s', err)
+        raise InvalidTimestampException from err
+
+
+def datetime_to_create_time_string(timestamp: int) -> str:
+    try:
+        return timestamp_to_datetime_utc(timestamp).strftime(
+            '%a %b  %d %H:%M:%S %Y')
+    except (ValueError, InvalidTimestampException) as err:
+        logger.debug(err)
+        raise
+
+
 class InvalidDateListException(Exception):
     pass
 
@@ -122,4 +139,8 @@ class GenerateTimeDeltaException(Exception):
 
 
 class InvalidStartTimeException(ValueError):
+    pass
+
+
+class InvalidTimestampException(ValueError):
     pass
