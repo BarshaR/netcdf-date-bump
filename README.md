@@ -15,6 +15,7 @@ I wanted a CLI tool that allows you to:
 
 + Update all the timestamps in a NetCDF file to begin at the current date whilst retaining the existing time step intervals (e.g 1 hour, 3 hour or daily time intervals between timestamps).
 + Update the timestamps to a user defined date and/or user defined time step interval.
++ Update the create-time variable to a user defined date.
 + Run in a non-destructive dry mode where it will only print the proposed changes - allowing the user to validate before modifying the NetCDF file.
 
 ### Setup
@@ -76,15 +77,16 @@ To use the CLI, simply run `$ netcdf_date_bump`.
 ```shell
 Usage: netcdf_date_bump [-h] [-i INPUT_FILE] [-o OUTPUT_FILE] [-d] [-t TIME_STEP] [-s START_TIME] [-l {debug,info,error}]
 
-  Written by Richard Barsha (@BarshR).
-
 Options:
     -h, --help                                show this help message and exit.
     -v, --version                             show version info.
     -i INPUT_FILE, --input-file INPUT_FILE    path to input file.
-    -o OUTPUT_FILE, --output-file OUTPUT_FILE name of output file (overwrites input file if not specified).
+    -o OUTPUT_FILE, --output-file OUTPUT_FILE name of output file 
+                                                (overwrites input file if not specified).
     -d, --dry-run                             print the output instead of modifying the file.
-    -t TIME_STEP, --time-step TIME_STEP       Amount of time between time slices in seconds.
-    -s START_TIME, --start-time START_TIME    ISO formatted time which the new times will begin from.
+    -t TIME_STEP, --time-step TIME_STEP       amount of time between time slices in seconds.
+    -s START_TIME, --start-time START_TIME    ISO formatted time which the new times will begin from. Format: YYYY-MM-DDTHH:MM:SSZ.
+    -c CREATE_TIME, --create-time CREATE_TIME create-time of the file. 
+                                                Format: YYYY-MM-DDTHH:MM:SSZ 
     -l {debug,info,error}, --log-level {debug,info,error} define log level.
 ```

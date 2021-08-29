@@ -79,6 +79,7 @@ def generate_start_datetime_now(start_datetime) -> datetime:
 
 
 def print_time_diff(old_times: List[datetime], new_times: List[datetime]):
+    '''Print a comparision between old and new time values in the list'''
     # Ensure time arrays are the same length
     # TODO: cleanup to properly support logging framework
     if len(old_times) == len(new_times):
@@ -93,9 +94,9 @@ def print_time_diff(old_times: List[datetime], new_times: List[datetime]):
             "Unable to print time diff - time arrays are of different length")
 
 
-def parse_start_datetime(date_str: str) -> datetime:
+def string_to_datetime_utc(date_str: str) -> datetime:
+    '''Convert a UTC formatted string to a datetime object'''
     try:
-        logger.debug('Parsing start-time')
         return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
     except ValueError as err:
         logger.debug(err)
@@ -103,6 +104,13 @@ def parse_start_datetime(date_str: str) -> datetime:
             'Failed to parse date: %s. Required format: \
                 YYYY-MM-DDTHH:MM:SSZ', date_str)
         raise
+
+
+def datetime_to_timestamp(input_date: datetime) -> int:
+    '''Convert datetime to integer timestamp.
+        This is needed as datetime.timestamp() returns a float.
+    '''
+    return int(str(input_date.timestamp()).split('.', maxsplit=1)[0])
 
 
 class InvalidDateListException(Exception):

@@ -10,7 +10,7 @@ class TestDateTimeUtils(unittest.TestCase):
         date_str = '2021-06-24T14:33:00Z'
 
         # When
-        result = datetime_utils.parse_start_datetime(date_str)
+        result = datetime_utils.string_to_datetime_utc(date_str)
 
         # Then
         self.assertEqual(result.year, 2021)
@@ -24,7 +24,7 @@ class TestDateTimeUtils(unittest.TestCase):
         date_str = '2021-13-24T14:33:00Z'
 
         # When
-        result = datetime_utils.parse_start_datetime(date_str)
+        result = datetime_utils.string_to_datetime_utc(date_str)
 
         # Then
         self.assertIsNone(result)
@@ -34,7 +34,7 @@ class TestDateTimeUtils(unittest.TestCase):
         date_str = 12
 
         # When
-        result = datetime_utils.parse_start_datetime(date_str)
+        result = datetime_utils.string_to_datetime_utc(date_str)
 
         # Then
         self.assertIsNone(result)
